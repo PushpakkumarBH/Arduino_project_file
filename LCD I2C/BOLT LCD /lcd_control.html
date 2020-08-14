@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Lcd Display Interface</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    </head>
+    <body>
+        <div >Only enter numerical part of the bolt id. For example if you want to send data device with id BOLT452317, then enter 452317</div><br>
+        <div>Bolt ID:<input type="Text" id="boltid" placeholder="xxxx"></div><br>
+        <div>API key:<input type="Text" id="apikey" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div><br>
+        <div >Enter the message you want to display below</div><br>
+        <input id="command" type="text" size="40"><br>
+        <button onclick="SendCommand()">Send</button><br>
+        <div id="display"></div><br>
+        <div id="commandstatus"></div><br>
+        <div id="commandvalue"></div><br>
+        <script>
+            link="";
+            function SendCommand(){
+                var apikey=document.getElementById('apikey').value;
+                var devicename=document.getElementById("boltid").value;
+                var command=document.getElementById('command').value;
+                link="https://cloud.boltiot.com/remote/"+apikey+"/serialWrite?data="+command+"&till=10&baud=9600&deviceName=BOLT"+devicename;
+                if(apikey==""){
+                    document.getElementById('commandstatus').innerHTML="Please enter an api key"
+                    return;
+                }
+                if(devicename==""){
+                    document.getElementById('commandstatus').innerHTML="Please enter a device name"
+                    return;
+                }
+                if(command==""){
+                    document.getElementById('commandstatus').innerHTML="Please enter some data"
+                    return;
+                }
+                $.get(link,function(success,value){
+                    if(value=="success"){
+                        if(success['success']==1){
+                            document.getElementById('commandstatus').innerHTML="The link was successful";
+                            document.getElementById('display').innerHTML="This is the link <a href=\""+link+"\">"+link+"</a>";
+                        }else{
+                            document.getElementById('commandstatus').innerHTML=success['value'];
+                        }
+                    }else{
+                        document.getElementById('commandstatus').innerHTML="Please check the api key entered"
+                    }
+                });
+            }
+        </script>
+    </body>
+</html>
