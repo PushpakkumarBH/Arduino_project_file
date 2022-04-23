@@ -1,0 +1,92 @@
+#include <FirebaseArduino.h>
+#include <ESP8266WiFi.h>     //wifi library
+#define WIFI_SSID "Airtel Home"  //replace SSID with your wifi username
+#define WIFI_PASSWORD "*********" //replace PWD with your wifi password
+#define WIFI_LED D5          //connect a led to any of the gpio pins of the board and replace pin_number with it eg. D4
+#define FIREBASE_HOST "some_firebase_host" //link of api
+#define FIREBASE_AUTH "secret"             //database secret
+
+int trig = 8;
+int echo = 7;
+
+long microsecondsToInches(float microseconds)
+{
+    return microseconds / 74 / 2;
+}
+
+long microsecondsToCentimeters(float microseconds)
+{
+    return microseconds / 29 / 2;
+}
+
+
+void setup()
+{
+    Serial.begin(9600);
+
+    pinMode(WIFI_LED, OUTPUT); //define pinmodes
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    //connect to wifi
+    while (WiFi.status() != WL_CONNECTED)
+    { //wait till connected to WiFi
+        delay(100);
+        digitalWrite(WIFI_LED, LOW); //Blink the light till connected to WiFi
+        delay(100);
+        digitalWrite(WIFI_LED, HIGH);
+        Serial.print(".");
+    }
+
+    Serial.println("");
+    Serial.println("WiFi connected");
+    digitalWrite(WIFI_LED, HIGH);
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+
+    Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH); //connect to Database
+    pinMode(trig, OUTPUT);
+    pinMode(echo, INPUT);
+
+    delay(1000);
+}
+
+void loop()
+{
+    String firebaseResult = firebaseGet();
+    delay(100);
+
+    // Transmitting pulse
+    digitalWrite(trig, LOW);
+    delayMicroseconds(2);
+    digitalWrite(trig, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trig, LOW);
+
+    float t = 0, h = 0, hp = 0, inches = 0, cm = 0, offset = 1.8;
+
+    if (firebaseResult == "ON")
+    {
+        //code to happen if the status is ON
+
+        // Waiting for pulse
+        t = pulseIn(echo, HIGH);
+
+        // Calculating distance
+
+        h = t;
+        hp = h;
+        h = t / offset; //half the bottle (16)
+        h = h - 7;      // water height, 0 - 50 cm   - 0-16cm
+                        //
+        hp = (2 * h);   // distance in %, 0-100 %
+
+        cm = microsecondsToCentimeters(hp);
+        Serial.print(cm);
+        Serial.print("\n");
+
+        delay(1000);
+    }
+    else
+    {
+        //code to happen if the status is OFF
+    }
+}
